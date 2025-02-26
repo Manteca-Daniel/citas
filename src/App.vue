@@ -1,6 +1,36 @@
 <script setup>
+import { onMounted, computed } from "vue";  
+import { useCounterStore } from "./stores/counter";  
 
+const counter = useCounterStore();
+
+const isLoggedIn = computed(() => {
+  console.log("Logeado: ",counter.token);  // Esto te ayudará a ver el valor de logged.token
+  return !!counter.token;
+});
+
+const fetchData = async () => {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/migracion", {
+      method: "GET",
+    });
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+onMounted(() => {
+  fetchData();
+});
+
+const logout = () => {
+  counter.token = "";  
+  window.location.reload();
+};
 </script>
+
 
 <template>
   <header class="header">
@@ -9,7 +39,10 @@
       <router-link to="/about">About</router-link>
     </nav>
 
-    <div class="auth-links">
+    <div v-if="isLoggedIn">
+      <button @click="logout" class="logout-button">Logout</button>
+    </div>
+    <div v-else class="auth-links"> <!-- Cambié v-if por v-else aquí -->
       <router-link to="/login" class="login">Login</router-link>
       <router-link to="/register" class="register">Register</router-link>
     </div>
@@ -57,6 +90,20 @@
   background-color: #e5e7eb;
 }
 
+.logout-button {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.logout-button:hover {
+  background-color: darkred;
+}
+
 .register {
   background-color: #facc15;
   color: #1e3a8a;
@@ -83,4 +130,3 @@
   margin-top: 2rem;
 }
 </style>
-
