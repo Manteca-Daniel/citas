@@ -1,14 +1,17 @@
-import { ref } from 'vue'
-import { defineStore } from 'pinia'
+import { ref } from 'vue';
+import { defineStore } from 'pinia';
 
 export const useCounterStore = defineStore('counter', () => {
-  const token = ref('') // Definir el token como estado reactivo
+  const token = ref(localStorage.getItem('token') || '');
 
-  return { token } // Asegurar que el token sea accesible desde fuera de la store
-})
+  const setToken = (newToken) => {
+    token.value = newToken;
+    if (newToken) {
+      localStorage.setItem('token', newToken);
+    } else {
+      localStorage.removeItem('token');
+    }
+  };
 
-export const logged = defineStore('counter', () => {
-  const log = ref('') // Definir el token como estado reactivo
-
-  return { log } // Asegurar que el token sea accesible desde fuera de la store
-})
+  return { token, setToken };
+});

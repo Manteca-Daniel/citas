@@ -1,76 +1,64 @@
 <template>
+  <main class="container">
+    <section class="intro">
+      <h1>Reserva tu cita con nosotros</h1>
+      <p class="subtitle">Sigue estos sencillos pasos y agenda tu cita hoy mismo.</p>
+    </section>
 
-  <main>
-    <p>Reserva tu cita con nosotros</p>
+    <section class="steps">
+      <h2>¿Cómo funciona?</h2>
+      <ol class="steps-list">
+        <li><span>1.</span> Selecciona el servicio que deseas</li>
+        <li><span>2.</span> Selecciona la fecha y hora</li>
+        <li><span>3.</span> Confirma tu cita</li>
+      </ol>
+    </section>
 
-    <h2>¿Cómo funciona?</h2>
-    <p>Reserva tu cita en 3 sencillos pasos</p>
+    <section class="benefits">
+      <h2>¿Por qué reservar con nosotros?</h2>
+      <ul class="benefits-list">
+        <li>👨‍⚕️ Atención personalizada</li>
+        <li>🔧 Profesionales cualificados</li>
+        <li>✨ Tratamientos de calidad</li>
+      </ul>
+    </section>
 
-    <ol>
-      <li>Selecciona el servicio que deseas</li>
-      <li>Selecciona la fecha y hora</li>
-      <li>Confirma tu cita</li>
-    </ol>
-
-    <h2>¿Por qué reservar con nosotros?</h2>
-    <p>Reserva tu cita con nosotros y disfruta de los siguientes beneficios:</p>
-
-    <ul>
-      <li>Atención personalizada</li>
-      <li>Profesionales cualificados</li>
-      <li>Tratamientos de calidad</li>
-    </ul>
-
-    <button @click="fetchCenters" class="toggle-button">
-      {{ showCenters ? "Ocultar centros" : "Mostrar centros" }}
-    </button>
-
-    <button @click="fetchProfile" class="toggle-button">
-      {{ showProfile ? "Ocultar perfil" : "Mostrar perfil" }}
-    </button>
-
-    <button
-      @click="showReservationForm = !showReservationForm"
-      class="toggle-button"
-      v-if="isLoggedIn"
-    >
-      {{ showReservationForm ? "Ocultar reserva" : "Reservar cita" }}
-    </button>
-
-    <button @click="fetchAppointments" class="toggle-button">
-      {{ showAppointments ? "Ocultar citas" : "Mostrar citas" }}
-    </button>
-
-    <p v-if="errorMessage" class="error">ERROR: {{ errorMessage }}</p>
-
-    <!-- Lista de centros si se han cargado -->
-    <ul v-if="showCenters && centers.length">
-      <li v-for="center in centers" :key="center.id">
-        {{ center.name }}
-      </li>
-    </ul>
-
-    <div v-if="showReservationForm">
-      <h2>Reservar Cita</h2>
-      <label for="center">Selecciona un centro:</label>
-      <select v-model="selectedCenter" id="center" class="center_reservation">
-        <option disabled value="">Selecciona un centro</option>
-        <template v-for="center in centers">
-          <option :value="center.name">
-            {{ center.name }}
-          </option>
-        </template>
-      </select>
-
-      <label for="datetime">Selecciona fecha y hora:</label>
-      <input type="datetime-local" v-model="selectedDateTime" id="datetime" />
-
-      <button @click="reserveAppointment" class="toggle-button">
-        Confirmar Cita
+    <div class="buttons">
+      <button @click="fetchCenters" class="btn">
+        {{ showCenters ? "Ocultar centros" : "Mostrar centros" }}
+      </button>
+      <button @click="fetchProfile" class="btn">
+        {{ showProfile ? "Ocultar perfil" : "Mostrar perfil" }}
+      </button>
+      <button @click="showReservationForm = !showReservationForm" class="btn" v-if="isLoggedIn">
+        {{ showReservationForm ? "Ocultar reserva" : "Reservar cita" }}
+      </button>
+      <button @click="fetchAppointments" class="btn">
+        {{ showAppointments ? "Ocultar citas" : "Mostrar citas" }}
       </button>
     </div>
 
-    <div v-if="showProfile && profile">
+    <p v-if="errorMessage" class="error">ERROR: {{ errorMessage }}</p>
+
+    <ul v-if="showCenters && centers.length" class="centers-list">
+      <li v-for="center in centers" :key="center.id">{{ center.name }}</li>
+    </ul>
+
+    <div v-if="showReservationForm" class="reservation-form">
+      <h2>Reservar Cita</h2>
+      <label for="center">Selecciona un centro:</label>
+      <select v-model="selectedCenter" id="center" class="input">
+        <option disabled value="">Selecciona un centro</option>
+        <option v-for="center in centers" :value="center.name">{{ center.name }}</option>
+      </select>
+
+      <label for="datetime">Selecciona fecha y hora:</label>
+      <input type="datetime-local" v-model="selectedDateTime" id="datetime" class="input" />
+
+      <button @click="reserveAppointment" class="btn">Confirmar Cita</button>
+    </div>
+
+    <div v-if="showProfile && profile" class="profile">
       <h2>Tu Perfil</h2>
       <p><strong>Nombre:</strong> {{ profile.name }} {{ profile.lastname }}</p>
       <p><strong>Usuario:</strong> {{ profile.username }}</p>
@@ -79,22 +67,19 @@
       <p><strong>Fecha de registro:</strong> {{ profile.date }}</p>
     </div>
 
-    <div v-if="showAppointments && appointments.length">
-  <h2>Tus citas</h2>
-  <ul>
-    <li v-for="appointment in appointments" :key="appointment._id">
-      <p><strong>Centro:</strong> {{ appointment.center }}</p>
-      <!-- Asegúrate de que las propiedades day y hour existan -->
-      <p><strong>Fecha:</strong> {{ appointment.date }}</p>
-      <p><strong>Fecha de creación:</strong> {{ appointment.created_at }}</p>
-      <button @click="cancelAppointment(appointment)" class="cancel-button">Cancelar cita</button>
-    </li>
-  </ul>
-</div>
-
+    <div v-if="showAppointments && appointments.length" class="appointments">
+      <h2>Tus citas</h2>
+      <ul>
+        <li v-for="appointment in appointments" :key="appointment._id">
+          <p><strong>Centro:</strong> {{ appointment.center }}</p>
+          <p><strong>Fecha:</strong> {{ appointment.date }}</p>
+          <p><strong>Fecha de creación:</strong> {{ appointment.created_at }}</p>
+          <button @click="cancelAppointment(appointment)" class="btn cancel">Cancelar cita</button>
+        </li>
+      </ul>
+    </div>
   </main>
 </template>
-
 <script setup>
 import { ref, computed } from "vue";
 import { useCounterStore } from "../stores/counter";
@@ -264,20 +249,62 @@ const reserveAppointment = async () => {
 </script>
 
 <style scoped>
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+  text-align: center;
+}
 
-.toggle-button {
+h1 {
+  font-size: 24px;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #666;
+}
+
+.steps-list, .benefits-list, .centers-list {
+  list-style: none;
+  padding: 0;
+}
+
+.steps-list li {
+  background: #f3f3f3;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
+}
+
+.benefits-list li {
+  padding: 10px;
+  font-weight: bold;
+}
+
+.btn {
   background-color: #007bff;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px 15px;
   font-size: 16px;
   cursor: pointer;
   border-radius: 5px;
-  margin: 20px 0;
+  margin: 10px 5px;
+  transition: background 0.3s ease;
 }
 
-.toggle-button:hover {
+.btn:hover {
   background-color: #0056b3;
+}
+
+.cancel {
+  background-color: #dc3545;
+}
+
+.cancel:hover {
+  background-color: #b22a37;
 }
 
 .error {
@@ -285,22 +312,18 @@ const reserveAppointment = async () => {
   font-weight: bold;
 }
 
-.center_reservation {
-  width: 100%; /* Asegura que el select ocupe todo el ancho disponible */
-  padding: 10px;
-  font-size: 16px;
+.input {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: white;
-  appearance: none; /* Evita estilos predeterminados del navegador */
 }
 
-div[v-if="showReservationForm"] {
-  display: block;
-  padding: 20px;
+.reservation-form, .profile, .appointments {
   background: #f9f9f9;
+  padding: 20px;
   border-radius: 10px;
-  max-width: 400px;
-  margin: auto;
+  margin-top: 20px;
 }
 </style>
