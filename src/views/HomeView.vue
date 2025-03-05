@@ -81,7 +81,7 @@
   </main>
 </template>
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useCounterStore } from "../stores/counter";
 
 const counter = useCounterStore();
@@ -121,6 +121,31 @@ const fetchCenters = async () => {
     }
   }
 };
+
+// const cargarCentros = async () => {
+//   showCenters.value = false;
+//   if (showCenters.value && centers.value.length === 0) {
+//     try {
+//       const response = await fetch("http://127.0.0.1:5000/centers", {
+//         method: "GET",
+//         headers: {
+//           Authorization: `Bearer ${counter.token}`,
+//           Accept: "application/json",
+//         },
+//       });
+//       if (response.ok) {
+//         centers.value = await response.json();
+//         errorMessage.value = "";
+//       } else {
+//         throw new Error("Error al obtener los centros");
+//       }
+//     } catch (error) {
+//       errorMessage.value = "No se pudieron cargar los centros";
+//       centers.value = [];
+//     }
+//   }
+// };
+
 
 const fetchProfile = async () => {
   showProfile.value = !showProfile.value;
@@ -246,6 +271,11 @@ const reserveAppointment = async () => {
     errorMessage.value = "No se pudo reservar la cita";
   }
 };
+
+onMounted(() => {
+  fetchCenters();
+  showCenters.value = false;
+});
 </script>
 
 <style scoped>

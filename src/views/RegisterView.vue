@@ -39,6 +39,9 @@
 <script>
 export default {
   data() {
+    const today = new Date();
+    const formattedDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+
     return {
       user: {
         username: "",
@@ -47,7 +50,7 @@ export default {
         lastname: "",
         email: "",
         phone: "",
-        date: "25/12/2025"
+        date: formattedDate
       },
       errorMessage: "",
     };
