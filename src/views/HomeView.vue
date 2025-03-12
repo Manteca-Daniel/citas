@@ -2,7 +2,9 @@
   <main class="container">
     <section class="intro">
       <h1>Reserva tu cita con nosotros</h1>
-      <p class="subtitle">Sigue estos sencillos pasos y agenda tu cita hoy mismo.</p>
+      <p class="subtitle">
+        Sigue estos sencillos pasos y agenda tu cita hoy mismo.
+      </p>
     </section>
 
     <section class="steps">
@@ -30,7 +32,11 @@
       <button @click="fetchProfile" class="btn">
         {{ showProfile ? "Ocultar perfil" : "Mostrar perfil" }}
       </button>
-      <button @click="showReservationForm = !showReservationForm" class="btn" v-if="isLoggedIn">
+      <button
+        @click="showReservationForm = !showReservationForm"
+        class="btn"
+        v-if="isLoggedIn"
+      >
         {{ showReservationForm ? "Ocultar reserva" : "Reservar cita" }}
       </button>
       <button @click="fetchAppointments" class="btn">
@@ -49,22 +55,70 @@
       <label for="center">Selecciona un centro:</label>
       <select v-model="selectedCenter" id="center" class="input">
         <option disabled value="">Selecciona un centro</option>
-        <option v-for="center in centers" :value="center.name">{{ center.name }}</option>
+        <option v-for="center in centers" :value="center.name">
+          {{ center.name }}
+        </option>
       </select>
 
       <label for="datetime">Selecciona fecha y hora:</label>
-      <input type="datetime-local" v-model="selectedDateTime" id="datetime" class="input" />
+      <input
+        type="datetime-local"
+        v-model="selectedDateTime"
+        id="datetime"
+        class="input"
+      />
 
       <button @click="reserveAppointment" class="btn">Confirmar Cita</button>
     </div>
 
     <div v-if="showProfile && profile" class="profile">
       <h2>Tu Perfil</h2>
-      <p><strong>Nombre:</strong> {{ profile.name }} {{ profile.lastname }}</p>
-      <p><strong>Usuario:</strong> {{ profile.username }}</p>
-      <p><strong>Email:</strong> {{ profile.email }}</p>
-      <p><strong>Teléfono:</strong> {{ profile.phone }}</p>
-      <p><strong>Fecha de registro:</strong> {{ profile.date }}</p>
+
+      <button @click="isEditing = !isEditing" class="btn">
+        {{ isEditing ? "Cancelar" : "Editar" }}
+      </button>
+
+      <label for="name">Nombre:</label>
+      <input
+        v-model="editableProfile.name"
+        id="name"
+        class="input"
+        :disabled="!isEditing"
+      />
+
+      <label for="lastname">Apellido:</label>
+      <input
+        v-model="editableProfile.lastname"
+        id="lastname"
+        class="input"
+        :disabled="!isEditing"
+      />
+
+      <label for="username">Usuario:</label>
+      <input :value="profile.username" id="username" class="input" disabled />
+
+      <label for="email">Email:</label>
+      <input
+        v-model="editableProfile.email"
+        id="email"
+        class="input"
+        :disabled="!isEditing"
+      />
+
+      <label for="phone">Teléfono:</label>
+      <input
+        v-model="editableProfile.phone"
+        id="phone"
+        class="input"
+        :disabled="!isEditing"
+      />
+
+      <label for="date">Fecha de registro:</label>
+      <input :value="profile.date" id="date" class="input" disabled />
+
+      <button @click="updateProfile" class="btn" :disabled="!isEditing">
+        Guardar cambios
+      </button>
     </div>
 
     <div v-if="showAppointments && appointments.length" class="appointments">
@@ -73,8 +127,12 @@
         <li v-for="appointment in appointments" :key="appointment._id">
           <p><strong>Centro:</strong> {{ appointment.center }}</p>
           <p><strong>Fecha:</strong> {{ appointment.date }}</p>
-          <p><strong>Fecha de creación:</strong> {{ appointment.created_at }}</p>
-          <button @click="cancelAppointment(appointment)" class="btn cancel">Cancelar cita</button>
+          <p>
+            <strong>Fecha de creación:</strong> {{ appointment.created_at }}
+          </p>
+          <button @click="cancelAppointment(appointment)" class="btn cancel">
+            Cancelar cita
+          </button>
         </li>
       </ul>
     </div>
@@ -86,15 +144,17 @@ import { useCounterStore } from "../stores/counter";
 
 const counter = useCounterStore();
 const centers = ref([]);
+const editableProfile = ref({ name: "", lastname: "", email: "", phone: "" });
 const profile = ref(null);
-const appointments = ref([]);  // Array para almacenar las citas del usuario
+const appointments = ref([]); // Array para almacenar las citas del usuario
 const errorMessage = ref("");
 const showCenters = ref(false);
 const showProfile = ref(false);
 const showReservationForm = ref(false);
-const showAppointments = ref(false);  // Controla la visibilidad de las citas
+const showAppointments = ref(false); // Controla la visibilidad de las citas
 const selectedCenter = ref("");
 const selectedDateTime = ref("");
+const isEditing = ref(false);
 
 const isLoggedIn = computed(() => !!counter.token);
 
@@ -146,7 +206,6 @@ const fetchCenters = async () => {
 //   }
 // };
 
-
 const fetchProfile = async () => {
   showProfile.value = !showProfile.value;
   if (showProfile.value && !profile.value) {
@@ -160,6 +219,7 @@ const fetchProfile = async () => {
       });
       if (response.ok) {
         profile.value = await response.json();
+        editableProfile.value = { ...profile.value };
         errorMessage.value = "";
       } else {
         throw new Error("Error al obtener el perfil");
@@ -168,6 +228,39 @@ const fetchProfile = async () => {
       errorMessage.value = "No se pudieron cargar los datos del perfil";
       profile.value = null;
     }
+  }
+};
+
+const updateProfile = async () => {
+  try {
+    const requestBody = {
+      name: editableProfile.value.name,
+      lastname: editableProfile.value.lastname,
+      email: editableProfile.value.email,
+      phone: editableProfile.value.phone,
+    };
+
+    const response = await fetch("http://127.0.0.1:5000/currentUser", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${counter.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (response.ok) {
+      alert("Perfil actualizado con éxito");
+      profile.value = { ...profile.value, ...requestBody }; // Actualiza los datos visibles
+      isEditing.value = false; // Salir del modo edición
+    } else {
+      const errorData = await response.json();
+      console.error("Error en la actualización:", errorData);
+      throw new Error("Error al actualizar el perfil");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo actualizar el perfil");
   }
 };
 
@@ -200,7 +293,9 @@ const fetchAppointments = async () => {
 
 const cancelAppointment = async (appointment) => {
   // Verifica que el usuario está seguro de querer cancelar la cita
-  const confirmCancel = confirm(`¿Estás seguro de que quieres cancelar la cita para el centro ${appointment.center} el ${appointment.date}?`);
+  const confirmCancel = confirm(
+    `¿Estás seguro de que quieres cancelar la cita para el centro ${appointment.center} el ${appointment.date}?`
+  );
 
   if (!confirmCancel) {
     return; // Si el usuario no confirma, no hace nada
@@ -211,7 +306,7 @@ const cancelAppointment = async (appointment) => {
       center: appointment.center,
       date: `${appointment.date}`, // Formato esperado por el servidor
     };
-
+    console.log("Petición de cancelación:", requestBody);
     const response = await fetch("http://127.0.0.1:5000/date/delete", {
       method: "POST",
       headers: {
@@ -223,9 +318,11 @@ const cancelAppointment = async (appointment) => {
 
     if (response.ok) {
       alert("Cita cancelada con éxito");
-      
+
       // Eliminar la cita de la lista local de citas
-      appointments.value = appointments.value.filter(a => a._id !== appointment._id);
+      appointments.value = appointments.value.filter(
+        (a) => a._id !== appointment._id
+      );
     } else {
       throw new Error("Error al cancelar la cita");
     }
@@ -235,8 +332,6 @@ const cancelAppointment = async (appointment) => {
   }
 };
 
-
-
 const reserveAppointment = async () => {
   if (!selectedCenter.value || !selectedDateTime.value) {
     errorMessage.value = "Por favor, selecciona un centro y una fecha";
@@ -245,7 +340,11 @@ const reserveAppointment = async () => {
 
   try {
     const date = new Date(selectedDateTime.value);
-    const formattedDate = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:00:00`;
+    const formattedDate = `${String(date.getDate()).padStart(2, "0")}/${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}/${date.getFullYear()} ${String(
+      date.getHours()
+    ).padStart(2, "0")}:00:00`;
 
     const requestBody = {
       center: selectedCenter.value,
@@ -279,6 +378,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.input {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
 .container {
   max-width: 600px;
   margin: auto;
@@ -296,7 +403,9 @@ h1 {
   color: #666;
 }
 
-.steps-list, .benefits-list, .centers-list {
+.steps-list,
+.benefits-list,
+.centers-list {
   list-style: none;
   padding: 0;
 }
@@ -350,7 +459,9 @@ h1 {
   border-radius: 5px;
 }
 
-.reservation-form, .profile, .appointments {
+.reservation-form,
+.profile,
+.appointments {
   background: #f9f9f9;
   padding: 20px;
   border-radius: 10px;
